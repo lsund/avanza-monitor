@@ -4,20 +4,23 @@ var config = require('./config');
 
 const avanza = new Avanza()
 
-const action = 'positions'
+const inserted = 7500;
 
 avanza.authenticate({
     username: config.username,
     password: config.password
 }).then(() => {
-    if (action == 'overview') {
+    const action = process.argv[2];
+    if (action == 'summary') {
         avanza.getOverview().then(overview => {
             handleOverview(overview);
         });
-    } else {
+    } else if (action == 'stocks') {
         avanza.getPositions().then(positions => {
             handlePositions(positions);
         });
+    } else {
+        console.log('Unknown action: ' + action);
     }
 });
 
@@ -37,6 +40,7 @@ var handleOverview = overview => {
     console.log('Performance %  : ' + roundN(isk.performancePercent, 2));
     console.log('Performance SEK: ' + roundN(isk.performance, 2));
     console.log('Profit         : ' + isk.totalProfit);
+    console.log('Inserted diff  : ' + roundN(isk.ownCapital - inserted, 2));
     console.log('------------------------------------------------------------');
 };
 
