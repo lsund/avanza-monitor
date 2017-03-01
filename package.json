@@ -1,0 +1,15 @@
+{
+  "name": "avanza-monitor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "babel-version": "babel --version"
+  },
+  "author": "Ludvig Sundström",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "babel-preset-es2015": "^6.22.0"
+  }
+}
