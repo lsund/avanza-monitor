@@ -44,14 +44,40 @@ var handleOverview = overview => {
     console.log('------------------------------------------------------------');
 };
 
+var asyncFunction = (item, resolve, stocks) => {
+    avanza.getStock(item.instrumentId).then(avanza_stock => {
+        resolve();
+        let stock = {
+            name: avanza_stock.name,
+            volume: item.volume,
+            profit: item.profit,
+            profitPercent: item.profitPercent
+        };
+        stocks.push(stock);
+    });
+}
+
 var handlePositions = positions => {
     console.log('STOCKS\n');
-    positions.map(position => {
-        avanza.getStock(position.instrumentId).then(stock => {
+    let stocks = [];
+    let requests = positions.map((avanza_position) => {
+        return new Promise((resolve) => {
+            asyncFunction(avanza_position, resolve, stocks);
+        });
+    });
+    Promise.all(requests).then(() => {
+        stocks.sort((a, b) => {
+            if (a.profitPercent > b.profitPercent) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+        stocks.map(stock => {
             console.log('Name:        ' + stock.name);
-            console.log('Volume     : ' + position.volume);
-            console.log('Profit SEK : ' + position.profit);
-            console.log('Profit %   : ' + position.profitPercent);
+            console.log('Volume     : ' + stock.volume);
+            console.log('Profit SEK : ' + stock.profit);
+            console.log('Profit %   : ' + stock.profitPercent);
             console.log('---------------------------------------------------');
         });
     });
