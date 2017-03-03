@@ -7,8 +7,6 @@ var util = require('util');
 
 const avanza = new Avanza();
 
-const inserted = 7500;
-
 avanza.authenticate({
     username: config.username,
     password: config.password
@@ -37,6 +35,7 @@ var handleOverview = overview => {
     var isk = overview.accounts.filter(account => {
         return account.accountType === 'Investeringssparkonto';
     })[0];
+    const diff = roundN(isk.ownCapital - config.inserted, 2);
     console.log('ISK\n');
     console.log('Number         : ' + isk.name);
     console.log('Balance        : ' + isk.totalBalance);
@@ -44,7 +43,7 @@ var handleOverview = overview => {
     console.log('Performance %  : ' + roundN(isk.performancePercent, 2));
     console.log('Performance SEK: ' + roundN(isk.performance, 2));
     console.log('Profit         : ' + isk.totalProfit);
-    console.log('Inserted diff  : ' + roundN(isk.ownCapital - inserted, 2));
+    console.log('Inserted diff  : ' + diff);
     console.log('------------------------------------------------------------');
     process.exit();
 };
