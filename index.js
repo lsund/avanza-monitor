@@ -3,6 +3,7 @@
 
 import Avanza from 'avanza';
 var config = require('./config');
+var util = require('util');
 
 const avanza = new Avanza();
 
@@ -65,7 +66,7 @@ var pushStock = (item, resolve, stocks) => {
 };
 
 var handlePositions = positions => {
-    console.log('STOCKS\n');
+    console.log('STOCKS');
     let stocks = [];
     let requests = positions.map((avanza_position) => {
         return new Promise((resolve) => {
@@ -81,14 +82,28 @@ var handlePositions = positions => {
             }
         });
         stocks.map(stock => {
-            console.log('Name             : ' + stock.name);
-            console.log('Volume           : ' + stock.volume);
-            console.log('Latest Price     : ' + stock.price);
-            console.log('Profit Today SEK : ' + stock.profitToday);
-            console.log('Profit Today %   : ' + stock.profitTodayPercent);
-            console.log('Profit Total SEK : ' + stock.profit);
-            console.log('Profit Total %   : ' + stock.profitPercent);
-            console.log('---------------------------------------------------');
+            const name = util.format(
+                            '%s (%s) %s SEK',
+                            stock.name,
+                            stock.volume,
+                            stock.price
+                        ); 
+            const profitToday = util.format(
+                                    'Today\t| %s %%\t| %s SEK\t|', 
+                                    stock.profitTodayPercent,
+                                    stock.profitToday
+                                );
+            const profit = util.format(
+                                    'Total\t| %s %%\t| %s SEK\t|', 
+                                    stock.profitPercent,
+                                    stock.profit
+                                );
+            console.log();
+            console.log(name);
+            console.log('-----------------------------------------');
+            console.log(profitToday);
+            console.log(profit);
+            console.log('-----------------------------------------');
         });
         process.exit();
     });
