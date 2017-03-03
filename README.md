@@ -10,3 +10,8 @@ module.exports = {
     inserted: TOTAL_INSERTED_SUM
 };
 ```
+
+run with
+```
+chmod +x ./run.sh && ./run.sh summary|stocks
+```
