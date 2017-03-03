@@ -1,2 +1,2 @@
 # avanza-monitor
-text monitor for avanza bank account
+Monitor the current positions and account summary

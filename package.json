@@ -1,13 +1,13 @@
 {
   "name": "avanza-monitor",
   "version": "1.0.0",
-  "description": "",
+  "description": "Monitor the stocks and account summary",
   "main": "index.js",
   "scripts": {
     "babel-version": "babel --version"
   },
   "author": "Ludvig Sundström",
-  "license": "ISC",
+  "license": "GPL-3.0",
   "devDependencies": {
     "babel-cli": "^6.23.0",
     "babel-preset-es2015": "^6.22.0"
