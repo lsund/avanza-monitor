@@ -4,8 +4,11 @@
 import Avanza from 'avanza';
 var config = require('./config');
 var util = require('util');
+var sprintf = require('sprintf-js').sprintf;
 
 const avanza = new Avanza();
+
+const verbose = false;
 
 avanza.authenticate({
     username: config.username,
@@ -42,7 +45,8 @@ var handleOverview = overview => {
     console.log('Capital        : ' + isk.ownCapital);
     console.log('Performance %  : ' + roundN(isk.performancePercent, 2));
     console.log('Performance SEK: ' + roundN(isk.performance, 2));
-    console.log('Profit         : ' + isk.totalProfit);
+    console.log('Profit SEK     : ' + isk.totalProfit);
+    console.log('Profit %       : ' + isk.totalProfitPercent);
     console.log('Inserted diff  : ' + diff);
     console.log('------------------------------------------------------------');
     process.exit();
@@ -52,20 +56,19 @@ var pushStock = (item, resolve, stocks) => {
     avanza.getStock(item.instrumentId).then(avanza_stock => {
         resolve();
         let stock = {
-            name: avanza_stock.name,
-            volume: item.volume,
-            price: avanza_stock.lastPrice,
-            profitTodayPercent: avanza_stock.changePercent,
-            profitToday: avanza_stock.change,
-            profit: item.profit,
-            profitPercent: item.profitPercent
+            name               : avanza_stock.name,
+            volume             : item.volume,
+            price              : avanza_stock.lastPrice,
+            profitTodayPercent : avanza_stock.changePercent,
+            profitToday        : avanza_stock.change,
+            profit             : item.profit,
+            profitPercent      : item.profitPercent
         };
         stocks.push(stock);
     });
 };
 
 var handlePositions = positions => {
-    console.log('STOCKS');
     let stocks = [];
     let requests = positions.map((avanza_position) => {
         return new Promise((resolve) => {
@@ -80,29 +83,46 @@ var handlePositions = positions => {
                 return 1;
             }
         });
+        console.log(sprintf(
+                '%-22s %-15s %-15s',
+                'STOCK',
+                'TODAY',
+                'TOTAL'
+            )
+        );
         stocks.map(stock => {
-            const name = util.format(
-                            '%s (%s) %s SEK',
-                            stock.name,
-                            stock.volume,
-                            stock.price
-                        ); 
-            const profitToday = util.format(
-                                    'Today\t| %s %%\t| %s SEK\t|', 
-                                    stock.profitTodayPercent,
-                                    stock.profitToday
-                                );
-            const profit = util.format(
-                                    'Total\t| %s %%\t| %s SEK\t|', 
-                                    stock.profitPercent,
-                                    stock.profit
-                                );
-            console.log();
-            console.log(name);
+            if (!verbose) {
+                const rep = sprintf(
+                                '%-22s %-15s %-15s',
+                                stock.name,
+                                stock.profitTodayPercent,
+                                stock.profitPercent
+                            );
+                console.log(rep);
+            } else {
+                const name = util.format(
+                                '%s (%s) %s SEK',
+                                stock.name,
+                                stock.volume,
+                                stock.price
+                            ); 
+                const profitToday = util.format(
+                                        'Today\t| %s %%\t| %s SEK\t|', 
+                                        stock.profitTodayPercent,
+                                        stock.profitToday
+                                    );
+                const profit = util.format(
+                                        'Total\t| %s %%\t| %s SEK\t|', 
+                                        stock.profitPercent,
+                                        stock.profit
+                                    );
+                console.log();
+                console.log(name);
+                console.log('-----------------------------------------');
+                console.log(profitToday);
+                console.log(profit);
             console.log('-----------------------------------------');
-            console.log(profitToday);
-            console.log(profit);
-            console.log('-----------------------------------------');
+            }
         });
         process.exit();
     });
