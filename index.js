@@ -124,6 +124,19 @@ var handlePositions = positions => {
             console.log('-----------------------------------------');
             }
         });
+        const sumToday = stocks.reduce((acc, stock) => {
+            return stock.profitTodayPercent + acc;
+        }, 0);
+        const sumTotal = stocks.reduce((acc, stock) => {
+            return stock.profitPercent + acc;
+        }, 0);
+        const avgToday = sumToday / stocks.length;
+        const avgTotal = sumTotal / stocks.length;
+        console.log('-----------------------------------------');
+        console.log(sprintf('%-22s %-15s %-15s',
+                            'Average',
+                            roundN(avgToday, 2),
+                            roundN(avgTotal, 2)));
         process.exit();
     });
 };
