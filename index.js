@@ -3,12 +3,10 @@
 
 import Avanza from 'avanza';
 var config = require('./config');
-var util = require('util');
 var sprintf = require('sprintf-js').sprintf;
 
 const avanza = new Avanza();
 
-const verbose = false;
 
 avanza.authenticate({
     username: config.username,
@@ -19,12 +17,12 @@ avanza.authenticate({
         avanza.getOverview().then(overview => {
             handleOverview(overview);
         });
-    } else if (action === 'stocks') {
-        avanza.getPositions().then(positions => {
-            handlePositions(positions);
+    } else if (action === 'positions') {
+        avanza.getPositions().then(avanza_positions => {
+            handlePositions(avanza_positions);
         });
     } else {
-        console.log('usage: ./index.js summary|stocks');
+        console.log('usage: ./index.js summary|positions');
         process.exit();
     }
 });
@@ -52,30 +50,37 @@ var handleOverview = overview => {
     process.exit();
 };
 
-var pushStock = (item, resolve, stocks) => {
-    avanza.getStock(item.instrumentId).then(avanza_stock => {
+var pushStock = (item, resolve, positions) => {
+    avanza.getStock(item.instrumentId).then(avanza_position => {
         resolve();
-        let stock = {
-            name               : avanza_stock.name,
+        let position = {
+            is_fund           : avanza_position.marketPlace === 'Fondmarknaden',
+            name               : avanza_position.name,
             volume             : item.volume,
-            price              : avanza_stock.lastPrice,
-            profitTodayPercent : avanza_stock.changePercent,
-            profitToday        : avanza_stock.change,
+            price              : avanza_position.lastPrice,
+            profitTodayPercent : avanza_position.changePercent,
+            profitToday        : avanza_position.change,
             profit             : item.profit,
             profitPercent      : item.profitPercent
         };
-        stocks.push(stock);
+        positions.push(position);
     });
 };
 
-var handlePositions = positions => {
-    let stocks = [];
-    let requests = positions.map((avanza_position) => {
+var handlePositions = avanza_positions => {
+    let positions = [];
+    let requests = avanza_positions.map((avanza_position) => {
         return new Promise((resolve) => {
-            pushStock(avanza_position, resolve, stocks);
+            pushStock(avanza_position, resolve, positions);
         });
     });
     Promise.all(requests).then(() => {
+        let stocks = positions.filter((element) => {
+            return !element.is_fund;
+        });
+        let funds = positions.filter((element) => {
+            return element.is_fund;
+        });
         stocks.sort((a, b) => {
             if (a.profitTodayPercent > b.profitTodayPercent) {
                 return -1;
@@ -83,60 +88,53 @@ var handlePositions = positions => {
                 return 1;
             }
         });
+        const fmtstr = '%-35s %-15s %-15s';
         console.log(sprintf(
-                '%-22s %-15s %-15s',
+                fmtstr,
                 'STOCK',
                 'TODAY',
                 'TOTAL'
             )
         );
-        stocks.map(stock => {
-            if (!verbose) {
-                const rep = sprintf(
-                                '%-22s %-15s %-15s',
-                                stock.name,
-                                stock.profitTodayPercent,
-                                stock.profitPercent
-                            );
-                console.log(rep);
-            } else {
-                const name = util.format(
-                                '%s (%s) %s SEK',
-                                stock.name,
-                                stock.volume,
-                                stock.price
-                            ); 
-                const profitToday = util.format(
-                                        'Today\t| %s %%\t| %s SEK\t|', 
-                                        stock.profitTodayPercent,
-                                        stock.profitToday
-                                    );
-                const profit = util.format(
-                                        'Total\t| %s %%\t| %s SEK\t|', 
-                                        stock.profitPercent,
-                                        stock.profit
-                                    );
-                console.log();
-                console.log(name);
-                console.log('-----------------------------------------');
-                console.log(profitToday);
-                console.log(profit);
-            console.log('-----------------------------------------');
-            }
+        stocks.map(position => {
+            const rep = sprintf(
+                            fmtstr,
+                            position.name,
+                            position.profitTodayPercent,
+                            position.profitPercent
+                        );
+            console.log(rep);
         });
-        const sumToday = stocks.reduce((acc, stock) => {
-            return stock.profitTodayPercent + acc;
+        const sumToday = stocks.reduce((acc, position) => {
+            return position.profitTodayPercent + acc;
         }, 0);
-        const sumTotal = stocks.reduce((acc, stock) => {
-            return stock.profitPercent + acc;
+        const sumTotal = stocks.reduce((acc, position) => {
+            return position.profitPercent + acc;
         }, 0);
         const avgToday = sumToday / stocks.length;
         const avgTotal = sumTotal / stocks.length;
-        console.log('-----------------------------------------');
-        console.log(sprintf('%-22s %-15s %-15s',
+        console.log('--------------------------------------------------------');
+        console.log(sprintf(fmtstr,
                             'Average',
                             roundN(avgToday, 2),
                             roundN(avgTotal, 2)));
+        console.log('--------------------------------------------------------');
+        console.log(sprintf(
+                fmtstr,
+                'FUND',
+                'TODAY',
+                'TOTAL'
+            )
+        );
+        funds.map(position => {
+            const rep = sprintf(
+                            fmtstr,
+                            position.name,
+                            position.profitTodayPercent,
+                            position.profitPercent
+                        );
+            console.log(rep);
+        });
         process.exit();
     });
 };
