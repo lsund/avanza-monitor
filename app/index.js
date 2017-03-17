@@ -2,12 +2,11 @@
 'use strict';
 
 import Avanza from 'avanza';
-var config = require('./config');
-var sprintf = require('sprintf-js').sprintf;
+var config = require('../config');
+var print = require('./print');
+var util = require('./util');
 
 const avanza = new Avanza();
-const fmtstr = '%-35s %-15s %-15s';
-
 
 avanza.authenticate({
     username: config.username,
@@ -28,22 +27,17 @@ avanza.authenticate({
     }
 });
 
-var roundN = (number, n) => {
-    const multiplyer = Math.pow(10, n);
-    return Math.round(number * multiplyer) / multiplyer;
-};
-
 var handleOverview = overview => {
     var isk = overview.accounts.filter(account => {
         return account.accountType === 'Investeringssparkonto';
     })[0];
-    const diff = roundN(isk.ownCapital - config.inserted, 2);
+    const diff = util.roundN(isk.ownCapital - config.inserted, 2);
     console.log('ISK\n');
     console.log('Number         : ' + isk.name);
     console.log('Balance        : ' + isk.totalBalance);
     console.log('Capital        : ' + isk.ownCapital);
-    console.log('Performance %  : ' + roundN(isk.performancePercent, 2));
-    console.log('Performance SEK: ' + roundN(isk.performance, 2));
+    console.log('Performance %  : ' + util.roundN(isk.performancePercent, 2));
+    console.log('Performance SEK: ' + util.roundN(isk.performance, 2));
     console.log('Profit SEK     : ' + isk.totalProfit);
     console.log('Profit %       : ' + isk.totalProfitPercent);
     console.log('Inserted diff  : ' + diff);
@@ -78,54 +72,6 @@ var calcAvg = (stocks) => {
     return [sumToday / stocks.length, sumTotal / stocks.length];
 };
 
-var printStocks = (stocks) => {
-    console.log(sprintf(
-            fmtstr,
-            'STOCK',
-            'TODAY',
-            'TOTAL'
-        )
-    );
-    stocks.map(stock => {
-        const rep = sprintf(
-                        fmtstr,
-                        stock.name,
-                        stock.profitTodayPercent,
-                        stock.profitPercent
-                    );
-        console.log(rep);
-    });
-};
-
-var printAverage = (avg) => {
-    console.log('--------------------------------------------------------');
-    console.log(sprintf(fmtstr,
-                        'Average',
-                        roundN(avg[0], 2),
-                        roundN(avg[1], 2)));
-    console.log('--------------------------------------------------------');
-
-};
-
-var printFunds = (funds) => {
-    console.log(sprintf(
-            fmtstr,
-            'FUND',
-            'TODAY',
-            'TOTAL'
-        )
-    );
-    funds.map(position => {
-        const rep = sprintf(
-                        fmtstr,
-                        position.name,
-                        position.profitTodayPercent,
-                        position.profitPercent
-                    );
-        console.log(rep);
-    });
-};
-
 var handlePositions = (avanza_positions) => {
     let positions = [];
     let requests = avanza_positions.map((avanza_position) => {
@@ -148,11 +94,11 @@ var handlePositions = (avanza_positions) => {
             }
         });
 
-        printStocks(stocks);
+        print.stocks(stocks);
 
-        printAverage(calcAvg(stocks));
+        print.average(calcAvg(stocks));
 
-        printFunds(funds);
+        print.funds(funds);
 
         process.exit();
     });
