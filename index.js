@@ -6,6 +6,7 @@ var config = require('./config');
 var sprintf = require('sprintf-js').sprintf;
 
 const avanza = new Avanza();
+const fmtstr = '%-35s %-15s %-15s';
 
 
 avanza.authenticate({
@@ -67,7 +68,65 @@ var pushStock = (item, resolve, positions) => {
     });
 };
 
-var handlePositions = avanza_positions => {
+var calcAvg = (stocks) => {
+    const sumToday = stocks.reduce((acc, position) => {
+        return position.profitTodayPercent + acc;
+    }, 0);
+    const sumTotal = stocks.reduce((acc, position) => {
+        return position.profitPercent + acc;
+    }, 0);
+    return [sumToday / stocks.length, sumTotal / stocks.length];
+};
+
+var printStocks = (stocks) => {
+    console.log(sprintf(
+            fmtstr,
+            'STOCK',
+            'TODAY',
+            'TOTAL'
+        )
+    );
+    stocks.map(stock => {
+        const rep = sprintf(
+                        fmtstr,
+                        stock.name,
+                        stock.profitTodayPercent,
+                        stock.profitPercent
+                    );
+        console.log(rep);
+    });
+};
+
+var printAverage = (avg) => {
+    console.log('--------------------------------------------------------');
+    console.log(sprintf(fmtstr,
+                        'Average',
+                        roundN(avg[0], 2),
+                        roundN(avg[1], 2)));
+    console.log('--------------------------------------------------------');
+
+};
+
+var printFunds = (funds) => {
+    console.log(sprintf(
+            fmtstr,
+            'FUND',
+            'TODAY',
+            'TOTAL'
+        )
+    );
+    funds.map(position => {
+        const rep = sprintf(
+                        fmtstr,
+                        position.name,
+                        position.profitTodayPercent,
+                        position.profitPercent
+                    );
+        console.log(rep);
+    });
+};
+
+var handlePositions = (avanza_positions) => {
     let positions = [];
     let requests = avanza_positions.map((avanza_position) => {
         return new Promise((resolve) => {
@@ -82,59 +141,19 @@ var handlePositions = avanza_positions => {
             return element.is_fund;
         });
         stocks.sort((a, b) => {
-            if (a.profitTodayPercent > b.profitTodayPercent) {
+            if (a.profitPercent > b.profitPercent) {
                 return -1;
             } else {
                 return 1;
             }
         });
-        const fmtstr = '%-35s %-15s %-15s';
-        console.log(sprintf(
-                fmtstr,
-                'STOCK',
-                'TODAY',
-                'TOTAL'
-            )
-        );
-        stocks.map(position => {
-            const rep = sprintf(
-                            fmtstr,
-                            position.name,
-                            position.profitTodayPercent,
-                            position.profitPercent
-                        );
-            console.log(rep);
-        });
-        const sumToday = stocks.reduce((acc, position) => {
-            return position.profitTodayPercent + acc;
-        }, 0);
-        const sumTotal = stocks.reduce((acc, position) => {
-            return position.profitPercent + acc;
-        }, 0);
-        const avgToday = sumToday / stocks.length;
-        const avgTotal = sumTotal / stocks.length;
-        console.log('--------------------------------------------------------');
-        console.log(sprintf(fmtstr,
-                            'Average',
-                            roundN(avgToday, 2),
-                            roundN(avgTotal, 2)));
-        console.log('--------------------------------------------------------');
-        console.log(sprintf(
-                fmtstr,
-                'FUND',
-                'TODAY',
-                'TOTAL'
-            )
-        );
-        funds.map(position => {
-            const rep = sprintf(
-                            fmtstr,
-                            position.name,
-                            position.profitTodayPercent,
-                            position.profitPercent
-                        );
-            console.log(rep);
-        });
+
+        printStocks(stocks);
+
+        printAverage(calcAvg(stocks));
+
+        printFunds(funds);
+
         process.exit();
     });
 };

@@ -1,5 +1,7 @@
 # avanza-monitor
-Monitor the current positions and account summary
+
+Monitor current account information. Should not be used by anyone without
+permission to use the avanza API.
 
 should exists a file `config.js` with the export
 
