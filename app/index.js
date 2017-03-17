@@ -31,18 +31,25 @@ var handleOverview = overview => {
     var isk = overview.accounts.filter(account => {
         return account.accountType === 'Investeringssparkonto';
     })[0];
-    const diff = util.roundN(isk.ownCapital - config.inserted, 2);
-    console.log('ISK\n');
-    console.log('Number         : ' + isk.name);
-    console.log('Balance        : ' + isk.totalBalance);
-    console.log('Capital        : ' + isk.ownCapital);
-    console.log('Performance %  : ' + util.roundN(isk.performancePercent, 2));
-    console.log('Performance SEK: ' + util.roundN(isk.performance, 2));
-    console.log('Profit SEK     : ' + isk.totalProfit);
-    console.log('Profit %       : ' + isk.totalProfitPercent);
-    console.log('Inserted diff  : ' + diff);
-    console.log('------------------------------------------------------------');
+    print.isk(isk);
     process.exit();
+};
+
+var splitPositions = (positions) => {
+    let stocks = positions.filter((element) => {
+        return !element.is_fund;
+    });
+    let funds = positions.filter((element) => {
+        return element.is_fund;
+    });
+    stocks.sort((a, b) => {
+        if (a.profitPercent > b.profitPercent) {
+            return -1;
+        } else {
+            return 1;
+        }
+    });
+    return [stocks, funds];
 };
 
 var pushStock = (item, resolve, positions) => {
@@ -62,16 +69,6 @@ var pushStock = (item, resolve, positions) => {
     });
 };
 
-var calcAvg = (stocks) => {
-    const sumToday = stocks.reduce((acc, position) => {
-        return position.profitTodayPercent + acc;
-    }, 0);
-    const sumTotal = stocks.reduce((acc, position) => {
-        return position.profitPercent + acc;
-    }, 0);
-    return [sumToday / stocks.length, sumTotal / stocks.length];
-};
-
 var handlePositions = (avanza_positions) => {
     let positions = [];
     let requests = avanza_positions.map((avanza_position) => {
@@ -80,26 +77,10 @@ var handlePositions = (avanza_positions) => {
         });
     });
     Promise.all(requests).then(() => {
-        let stocks = positions.filter((element) => {
-            return !element.is_fund;
-        });
-        let funds = positions.filter((element) => {
-            return element.is_fund;
-        });
-        stocks.sort((a, b) => {
-            if (a.profitPercent > b.profitPercent) {
-                return -1;
-            } else {
-                return 1;
-            }
-        });
-
+        let [stocks, funds] = splitPositions(positions);
         print.stocks(stocks);
-
-        print.average(calcAvg(stocks));
-
+        print.average(util.average(stocks));
         print.funds(funds);
-
         process.exit();
     });
 };

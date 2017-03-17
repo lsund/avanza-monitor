@@ -3,8 +3,23 @@
 
 var sprintf = require('sprintf-js').sprintf;
 var util = require('./util');
+var config = require('../config');
 
 const fmtstr = '%-35s %-15s %-15s';
+
+var isk = (isk) => {
+    const diff = util.roundN(isk.ownCapital - config.inserted, 2);
+    console.log('ISK\n');
+    console.log('Number         : ' + isk.name);
+    console.log('Balance        : ' + isk.totalBalance);
+    console.log('Capital        : ' + isk.ownCapital);
+    console.log('Performance %  : ' + util.roundN(isk.performancePercent, 2));
+    console.log('Performance SEK: ' + util.roundN(isk.performance, 2));
+    console.log('Profit SEK     : ' + isk.totalProfit);
+    console.log('Profit %       : ' + isk.totalProfitPercent);
+    console.log('Inserted diff  : ' + diff);
+    console.log('------------------------------------------------------------');
+};
 
 var average = (avg) => {
     console.log('--------------------------------------------------------');
@@ -56,4 +71,5 @@ var funds = (funds) => {
 module.exports.funds = funds;
 module.exports.average = average;
 module.exports.stocks = stocks;
+module.exports.isk = isk;
 
